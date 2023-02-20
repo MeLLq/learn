@@ -3,7 +3,7 @@
 #include <seastar/core/loop.hh>
 #include <seastar/core/reactor.hh>
 #include <seastar/core/sleep.hh>
-#include <seastar/rpc/lz4_compressor.hh>
+#include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
 #include <seastar/util/log.hh>
 
@@ -82,21 +82,6 @@ inline sstring read(serializer, Input &in, rpc::type<sstring>) {
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
 
-class mycomp : public rpc::compressor::factory {
-  const sstring _name = "LZ4";
-
-public:
-  virtual const sstring &supported() const override {
-    fmt::print("supported called\n");
-    return _name;
-  }
-  virtual std::unique_ptr<rpc::compressor>
-  negotiate(sstring feature, bool is_server) const override {
-    fmt::print("negotiate called with {}\n", feature);
-    return feature == _name ? std::make_unique<rpc::lz4_compressor>() : nullptr;
-  }
-};
-
 #define PING_TYPE 1
 
 sstring pingHandler(sstring data) {
@@ -110,9 +95,7 @@ int main(int ac, char **av) {
   app_template app;
   app.add_options()("port", bpo::value<uint16_t>()->default_value(12345),
                     "RPC server port")("server", bpo::value<std::string>(),
-                                       "Server address")(
-      "compress", bpo::value<bool>()->default_value(false),
-      "Compress RPC traffic");
+                                       "Server address");
   std::cout << "start ";
   rpc::protocol<serializer> myrpc(serializer{});
   static std::unique_ptr<rpc::protocol<serializer>::server> server;
@@ -125,22 +108,20 @@ int main(int ac, char **av) {
   return app.run_deprecated(ac, av, [&] {
     auto &&config = app.configuration();
     uint16_t port = config["port"].as<uint16_t>();
-    bool compress = config["compress"].as<bool>();
-    static mycomp mc;
+
     // clientside
     if (config.count("server")) {
       auto pingRPC = myrpc.make_client<sstring(sstring)>(PING_TYPE);
       std::cout << "client" << std::endl;
-      rpc::client_options co;
-      if (compress) {
-        co.compressor_factory = &mc;
-      }
-
       client = std::make_unique<rpc::protocol<serializer>::client>(
-          myrpc, co, ipv4_addr{config["server"].as<std::string>()});
-      for (auto i = 0; i < 10; i++)
-        pingRPC(*client, "ping").then(pingResponseHandler);
-
+          myrpc, ipv4_addr{config["server"].as<std::string>()});
+      do_for_each(boost::make_counting_iterator<int>(0),
+                  boost::make_counting_iterator(4), [pingRPC](int i) mutable {
+                    return sleep(3s).then([pingRPC] mutable {
+                      pingRPC(*client, "ping").then(pingResponseHandler);
+                    });
+                  });
+      // pingRPC(*client, "ping").then(pingResponseHandler);
     }
     // serverside
     else {
@@ -150,13 +131,8 @@ int main(int ac, char **av) {
       limits.bloat_factor = 1;
       limits.basic_request_size = 0;
       limits.max_memory = 10'000'000;
-      rpc::server_options so;
-      if (compress) {
-        so.compressor_factory = &mc;
-      }
-
       server = std::make_unique<rpc::protocol<serializer>::server>(
-          myrpc, so, ipv4_addr{port}, limits);
+          myrpc, ipv4_addr{port}, limits);
     }
   });
 }
