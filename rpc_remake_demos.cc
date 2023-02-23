@@ -1,5 +1,8 @@
 #include <cmath>
+#include <exception>
+#include <iostream>
 #include <seastar/core/app-template.hh>
+#include <seastar/core/future.hh>
 #include <seastar/core/loop.hh>
 #include <seastar/core/reactor.hh>
 #include <seastar/core/sleep.hh>
@@ -81,6 +84,7 @@ inline sstring read(serializer, Input &in, rpc::type<sstring>) {
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
+timer<lowres_clock> _stats_timer;
 
 #define PING_TYPE 1
 
@@ -100,7 +104,6 @@ int main(int ac, char **av) {
   rpc::protocol<serializer> myrpc(serializer{});
   static std::unique_ptr<rpc::protocol<serializer>::server> server;
   static std::unique_ptr<rpc::protocol<serializer>::client> client;
-  static double x = 30.0;
 
   static logger log("rpc_demo");
   myrpc.set_logger(&log);
@@ -108,19 +111,22 @@ int main(int ac, char **av) {
   return app.run_deprecated(ac, av, [&] {
     auto &&config = app.configuration();
     uint16_t port = config["port"].as<uint16_t>();
-
     // clientside
     if (config.count("server")) {
       auto pingRPC = myrpc.make_client<sstring(sstring)>(PING_TYPE);
       std::cout << "client" << std::endl;
       client = std::make_unique<rpc::protocol<serializer>::client>(
           myrpc, ipv4_addr{config["server"].as<std::string>()});
-      do_for_each(boost::make_counting_iterator<int>(0),
-                  boost::make_counting_iterator(4), [pingRPC](int i) mutable {
-                    return sleep(3s).then([pingRPC] mutable {
-                      pingRPC(*client, "ping").then(pingResponseHandler);
-                    });
-                  });
+      _stats_timer.arm_periodic(1s);
+      _stats_timer.set_callback([pingRPC] mutable {
+        pingRPC(*client, "ping")
+            .then(pingResponseHandler)
+            .handle_exception_type([](rpc::closed_error &err) {
+              _stats_timer.cancel();
+              engine().exit(0);
+            });
+      });
+
       // pingRPC(*client, "ping").then(pingResponseHandler);
     }
     // serverside
