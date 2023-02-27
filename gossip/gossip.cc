@@ -1,7 +1,9 @@
 #pragma once
 #include "gossip.hh"
 
-Gossip::Gossip(sstring local_adderss) {}
+Gossip::Gossip(sstring local_adderss) {
+  peer_local_.SetPeerIpAddr(local_adderss);
+}
 
 Peer Gossip::AddPeer(int peer_id, sstring ip_addr) {
   peer_local_.SetPeerId(peer_id);
