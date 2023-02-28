@@ -1,8 +1,6 @@
 #pragma once
 #include "gossip.hh"
 
-//что то изменил
-
 Gossip::Gossip(sstring local_adderss) {
   peer_local_.SetPeerIpAddr(local_adderss);
 }

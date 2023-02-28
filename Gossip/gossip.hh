@@ -5,8 +5,6 @@
 #include <seastar/core/reactor.hh>
 #include <seastar/rpc/rpc.hh>
 
-//какие то изменения
-
 using namespace seastar;
 
 struct serializer {};
