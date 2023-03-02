@@ -21,28 +21,27 @@ struct Config {
 class Gossip {
 public:
   Gossip(sstring local_address);
-  Peer AddPeer(int peer_id, sstring ip_addr);
+  Peer AddPeer(PeerId id, sstring ip_addr);
   void SetLocalPayload(Payload payload);
-  void DelPeer(PeerId peer_id);
+  void DelPeer(PeerId id);
 
 private:
   Peer peer_local_;
-  Config peers_;
+  std::map<PeerId, Peer> peers_;
 };
 
 class Peer {
 public:
+  Peer(PeerId id, sstring ip_addr);
   void SetPeerPayload(Payload add_payload);
   Payload GetPeerPayload();
   int GetPeerId();
   sstring GetPeerIpAddr();
-  void SetPeerId(int peer_id);
-  void SetPeerIpAddr(sstring ip_addr);
   void SetPeerClient(std::unique_ptr<rpc::protocol<serializer>::client> client);
 
 private:
   Payload payload_;
-  PeerId peer_id_;
-  sstring peer_ip_addr_;
+  PeerId id_;
+  sstring ip_addr_;
   std::unique_ptr<rpc::protocol<serializer>::client> client_;
 };
