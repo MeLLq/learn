@@ -33,11 +33,11 @@ private:
 class Peer {
 public:
   Peer(PeerId id, sstring ip_addr);
-  void SetPeerPayload(Payload add_payload);
-  Payload GetPeerPayload();
-  int GetPeerId();
-  sstring GetPeerIpAddr();
-  void SetPeerClient(std::unique_ptr<rpc::protocol<serializer>::client> client);
+  void SetPayload(Payload add_payload);
+  Payload GetPayload();
+  int GetId();
+  sstring GetIpAddr();
+  void SetClient(std::unique_ptr<rpc::protocol<serializer>::client> client);
 
 private:
   Payload payload_;
