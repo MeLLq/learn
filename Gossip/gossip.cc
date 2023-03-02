@@ -1,18 +1,18 @@
 #pragma once
 #include "gossip.hh"
 
-Gossip::Gossip(sstring local_adderss) {}
+Gossip::Gossip(sstring local_adderss) : _local_peer(1, local_adderss) {}
 
 Peer Gossip::AddPeer(PeerId peer_id, sstring ip_addr) {
   // peers_[peer_id] = Peer
 }
 
 void Gossip::SetLocalPayload(Payload payload) {
-  peer_local_.SetPayload(payload);
+  _local_peer.SetPayload(payload);
 }
 
 void Gossip::DelPeer(int host_id) {
-  for (auto it = peers_.payload.begin(); it != peers_.payload.end(); ++it) {
+  for (auto it = _peers.payload.begin(); it != peers_.payload.end(); ++it) {
     if ((*it) == host_id) {
       peers_.payload.erase(it); //
       return;
@@ -21,19 +21,19 @@ void Gossip::DelPeer(int host_id) {
 }
 
 void Peer::SetPayload(Payload add_payload) {
-  payload_.epoch = add_payload.epoch;
-  payload_.blob = std::move(add_payload.blob);
+  _payload.epoch = add_payload.epoch;
+  _payload.blob = std::move(add_payload.blob);
 }
 
-Peer::Peer(PeerId id, sstring ip_addr) : id_(id), ip_addr_(ip_addr) {}
+Peer::Peer(PeerId id, sstring ip_addr) : _id(id), _ip_addr(ip_addr) {}
 
-Payload Peer::GetPayload() { return payload_; }
+Payload Peer::GetPayload() { return _payload; }
 
-int Peer::GetId() { return id_; }
+int Peer::GetId() { return _id; }
 
-sstring Peer::GetIpAddr() { return ip_addr_; }
+sstring Peer::GetIpAddr() { return _ip_addr; }
 
 void Peer::SetClient(
     std::unique_ptr<rpc::protocol<serializer>::client> client) {
-  client_ = std::make_unique<rpc::protocol<serializer>::client>(client);
+  _client = std::make_unique<rpc::protocol<serializer>::client>(client);
 }

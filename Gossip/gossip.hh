@@ -26,8 +26,8 @@ public:
   void DelPeer(PeerId id);
 
 private:
-  Peer peer_local_;
-  std::map<PeerId, Peer> peers_;
+  Peer _local_peer;
+  std::map<PeerId, Peer> _peers;
 };
 
 class Peer {
@@ -40,8 +40,8 @@ public:
   void SetClient(std::unique_ptr<rpc::protocol<serializer>::client> client);
 
 private:
-  Payload payload_;
-  PeerId id_;
-  sstring ip_addr_;
-  std::unique_ptr<rpc::protocol<serializer>::client> client_;
+  Payload _payload;
+  PeerId _id;
+  sstring _ip_addr;
+  std::unique_ptr<rpc::protocol<serializer>::client> _client;
 };
