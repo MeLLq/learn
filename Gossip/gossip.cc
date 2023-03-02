@@ -4,19 +4,16 @@
 Gossip::Gossip(sstring local_adderss) : _local_peer(1, local_adderss) {}
 
 Peer Gossip::AddPeer(PeerId peer_id, sstring ip_addr) {
-  // peers_[peer_id] = Peer
+  _peers[peer_id] = {peer_id, ip_addr};
 }
 
 void Gossip::SetLocalPayload(Payload payload) {
   _local_peer.SetPayload(payload);
 }
 
-void Gossip::DelPeer(int host_id) {
-  for (auto it = _peers.payload.begin(); it != peers_.payload.end(); ++it) {
-    if ((*it) == host_id) {
-      peers_.payload.erase(it); //
-      return;
-    }
+void Gossip::DelPeer(PeerId id) {
+  if (_peers.count(id) > 0) {
+    _peers.erase(id);
   }
 }
 
