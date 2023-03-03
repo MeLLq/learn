@@ -14,7 +14,6 @@ struct Payload {
   std::vector<char> blob;
 };
 
-
 class Peer {
 public:
   Peer(PeerId id, sstring ip_addr);

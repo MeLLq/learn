@@ -11,6 +11,6 @@ public:
   void DelPeer(PeerId id);
 
 private:
-  Peer _local_peer;
+  std::shared_ptr<Peer> _local_peer;
   std::map<PeerId, Peer> _peers;
 };
