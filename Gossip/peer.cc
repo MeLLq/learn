@@ -14,7 +14,6 @@ int Peer::GetId() { return _id; }
 
 sstring Peer::GetIpAddr() { return _ip_addr; }
 
-void Peer::SetClient(
-    std::unique_ptr<rpc::protocol<serializer>::client> client) {
-  _client = std::make_unique<rpc::protocol<serializer>::client>(client);
+void Peer::SetClient(seastar::lw_shared_ptr<seastar::rpc::client> client) {
+  _rpc_client = std::move(client);
 }

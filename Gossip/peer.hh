@@ -21,11 +21,11 @@ public:
   Payload GetPayload();
   int GetId();
   sstring GetIpAddr();
-  void SetClient(std::unique_ptr<rpc::protocol<serializer>::client> client);
+  void SetClient(seastar::lw_shared_ptr<seastar::rpc::client> client);
 
 private:
   Payload _payload;
   PeerId _id;
   sstring _ip_addr;
-  std::unique_ptr<rpc::protocol<serializer>::client> _client;
+  seastar::lw_shared_ptr<seastar::rpc::client> _rpc_client;
 };
