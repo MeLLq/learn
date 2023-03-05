@@ -22,3 +22,7 @@ void Gossip::DelPeer(PeerId id) {
     _peers.erase(id);
   }
 }
+
+std::map<PeerId, std::shared_ptr<Peer>> Gossip::GetPeers() const {
+  return _peers;
+}

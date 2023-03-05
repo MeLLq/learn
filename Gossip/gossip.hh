@@ -9,8 +9,9 @@ public:
   std::shared_ptr<Peer> AddPeer(PeerId id, sstring ip_addr);
   void SetLocalPayload(Payload payload);
   void DelPeer(PeerId id);
+  std::map<PeerId, std::shared_ptr<Peer>> GetPeers() const;
 
 private:
-  std::shared_ptr<Peer> _local_peer;
+  std::shared_ptr<Peer> _local_peer = nullptr;
   std::map<PeerId, std::shared_ptr<Peer>> _peers;
 };
