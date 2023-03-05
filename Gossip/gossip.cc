@@ -26,3 +26,11 @@ void Gossip::DelPeer(PeerId id) {
 std::map<PeerId, std::shared_ptr<Peer>> Gossip::GetPeers() const {
   return _peers;
 }
+void Gossip::SendConfig(Config config) {
+  _timer.arm(std::chrono::seconds(1));
+  _timer.set_callback([this, config] mutable {
+    auto rand = std::mt19937(100);
+    int random_numer = rand() % _peers.size() - 1;
+    _peers.at(random_numer)->SetPayload(_local_peer.get()->GetPayload());
+  });
+}

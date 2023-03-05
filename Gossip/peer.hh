@@ -1,8 +1,10 @@
 #include <iostream>
+#include <random>
 #include <seastar/core/app-template.hh>
 #include <seastar/core/future.hh>
 #include <seastar/core/loop.hh>
 #include <seastar/core/reactor.hh>
+#include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
 
 using namespace seastar;
@@ -22,6 +24,9 @@ public:
   int GetId();
   sstring GetIpAddr();
   void SetClient(seastar::lw_shared_ptr<seastar::rpc::client> client);
+  seastar::lw_shared_ptr<seastar::rpc::client> GetRpcClient() const {
+    return _rpc_client;
+  }
 
 private:
   Payload _payload;
