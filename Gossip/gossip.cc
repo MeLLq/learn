@@ -5,6 +5,7 @@
 // _local_peer(std::make_shared<Peer>(nullptr,local_adderss)) {}
 
 Gossip::Gossip(sstring local_address) : _local_peer(nullptr) {
+  _timer.arm(std::chrono::seconds(1));
   _local_addres = local_address;
 }
 
@@ -27,7 +28,6 @@ std::map<PeerId, seastar::lw_shared_ptr<Peer>> Gossip::GetPeers() const {
   return _peers;
 }
 void Gossip::SendConfig(Config config) {
-  _timer.arm(std::chrono::seconds(1));
   _timer.set_callback([this, config] mutable {
     auto rand = std::mt19937(100);
     int random_numer = rand() % _peers.size() - 1;
