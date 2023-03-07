@@ -4,26 +4,26 @@
 // Gossip::Gossip(sstring local_adderss) :
 // _local_peer(std::make_shared<Peer>(nullptr,local_adderss)) {}
 
-Gossip::Gossip(sstring local_address)
-    : _local_peer(std::make_shared<Peer>(1, local_address)) {}
+Gossip::Gossip(sstring local_address) : _local_peer(nullptr) {
+  _local_addres = local_address;
+}
 
-std::shared_ptr<Peer> Gossip::AddPeer(PeerId peer_id, sstring ip_addr) {
-  auto ptr = std::make_shared<Peer>(peer_id, ip_addr);
+lw_shared_ptr<Peer> Gossip::AddPeer(PeerId peer_id, sstring ip_addr) {
+  auto ptr = seastar::make_lw_shared<Peer>(peer_id, ip_addr);
   _peers[peer_id] = ptr;
   return ptr;
 }
 
 void Gossip::SetLocalPayload(Payload payload) {
+  if (_local_peer == nullptr) {
+    _local_peer = seastar::make_lw_shared<Peer>(1, _local_addres);
+  }
   _local_peer.get()->SetPayload(payload);
 }
 
-void Gossip::DelPeer(PeerId id) {
-  if (_peers.count(id) > 0) {
-    _peers.erase(id);
-  }
-}
+void Gossip::DelPeer(PeerId id) { _peers.erase(id); }
 
-std::map<PeerId, std::shared_ptr<Peer>> Gossip::GetPeers() const {
+std::map<PeerId, seastar::lw_shared_ptr<Peer>> Gossip::GetPeers() const {
   return _peers;
 }
 void Gossip::SendConfig(Config config) {

@@ -15,7 +15,9 @@ struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;
 };
-
+struct Config {
+  std::vector<PeerId> payload;
+};
 class Peer {
 public:
   Peer(PeerId id, sstring ip_addr);
