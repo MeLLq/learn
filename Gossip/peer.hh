@@ -6,8 +6,10 @@
 #include <seastar/core/reactor.hh>
 #include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
+#include <seastar/util/log.hh>
+#include "ss.hh"
 
-using namespace seastar;
+
 using PeerId = uint64_t;
 struct serializer {};
 
@@ -20,19 +22,15 @@ struct Config {
 };
 class Peer {
 public:
-  Peer(PeerId id, sstring ip_addr);
+  Peer(PeerId id, ss::sstring ip_addr);
   void SetPayload(Payload add_payload);
   Payload GetPayload();
   int GetId();
-  sstring GetIpAddr();
-  void SetClient(seastar::lw_shared_ptr<seastar::rpc::client> client);
-  seastar::lw_shared_ptr<seastar::rpc::client> GetRpcClient() const {
-    return _rpc_client;
-  }
+  ss::sstring GetIpAddr();
 
 private:
   Payload _payload;
   PeerId _id;
-  sstring _ip_addr;
-  seastar::lw_shared_ptr<seastar::rpc::client> _rpc_client;
+  ss::sstring _ip_addr;
+  std::unique_ptr<seastar::rpc::client> _rpc_client;
 };
