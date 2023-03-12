@@ -1,3 +1,4 @@
+#include "ss.hh"
 #include <iostream>
 #include <random>
 #include <seastar/core/app-template.hh>
@@ -7,8 +8,6 @@
 #include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
 #include <seastar/util/log.hh>
-#include "ss.hh"
-
 
 using PeerId = uint64_t;
 struct serializer {};
@@ -32,5 +31,5 @@ private:
   Payload _payload;
   PeerId _id;
   ss::sstring _ip_addr;
-  std::unique_ptr<seastar::rpc::client> _rpc_client;
+  std::unique_ptr<ss::rpc::client> _rpc_client;
 };

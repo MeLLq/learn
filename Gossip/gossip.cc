@@ -10,7 +10,7 @@ Gossip::Gossip(ss::sstring local_address) : _local_peer(nullptr) {
 }
 
 ss::lw_shared_ptr<Peer> Gossip::AddPeer(PeerId peer_id, ss::sstring ip_addr) {
-  auto ptr = seastar::make_lw_shared<Peer>(peer_id, ip_addr);
+  auto ptr = ss::make_lw_shared<Peer>(peer_id, ip_addr);
   _peers[peer_id] = ptr;
   return ptr;
 }
