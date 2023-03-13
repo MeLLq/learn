@@ -2,8 +2,9 @@
 #include "peer.hh"
 #include "ss.hh"
 
-ss::rpc::protocol<serializer> myrpc(serializer{});
-ss::logger lgr("rpc_demo");
+static ss::rpc::protocol<serializer> myrpc(serializer{});
+static ss::logger lgr("rpc_demo");
+std::unique_ptr<ss::rpc::protocol<serializer>::client> Peer::_rpc_client;
 
 void Peer::SetPayload(Payload add_payload) {
   _payload.epoch = add_payload.epoch;
@@ -13,7 +14,11 @@ void Peer::SetPayload(Payload add_payload) {
 Peer::Peer(PeerId id, ss::sstring ip_addr) : _id(id), _ip_addr(ip_addr) {
   myrpc.set_logger(&lgr);
   _rpc_client = std::make_unique<ss::rpc::protocol<serializer>::client>(
-      myrpc, ss::ipv4_addr(ip_addr));
+      myrpc, ss::ipv4_addr{ip_addr});
+
+  /*
+  _rpc_client = ss::rpc::protocol<serializer>::client>(
+      myrpc, ss::ipv4_addr(ip_addr));*/
 }
 
 /*Peer::Peer(PeerId id, ss::sstring ip_addr) : _id(id), _ip_addr(ip_addr) {

@@ -11,7 +11,6 @@
 
 using PeerId = uint64_t;
 struct serializer {};
-
 struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;
@@ -31,5 +30,5 @@ private:
   Payload _payload;
   PeerId _id;
   ss::sstring _ip_addr;
-  std::unique_ptr<ss::rpc::client> _rpc_client;
+  static std::unique_ptr<ss::rpc::protocol<serializer>::client> _rpc_client;
 };
