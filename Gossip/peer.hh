@@ -11,6 +11,8 @@
 
 using PeerId = uint64_t;
 struct serializer {};
+
+static ss::rpc::protocol<serializer> myrpc(serializer{});
 struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;

@@ -5,7 +5,6 @@
 // _local_peer(std::make_shared<Peer>(nullptr,local_adderss)) {}
 
 Gossip::Gossip(ss::sstring local_address) : _local_peer(nullptr) {
-  _timer.arm(std::chrono::seconds(1));
   _local_addres = local_address;
 }
 

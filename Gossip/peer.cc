@@ -2,7 +2,6 @@
 #include "peer.hh"
 #include "ss.hh"
 
-static ss::rpc::protocol<serializer> myrpc(serializer{});
 static ss::logger lgr("rpc_demo");
 std::unique_ptr<ss::rpc::protocol<serializer>::client> Peer::_rpc_client;
 
