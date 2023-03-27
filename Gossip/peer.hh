@@ -1,4 +1,5 @@
 #include "ss.hh"
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <seastar/core/app-template.hh>
@@ -8,6 +9,7 @@
 #include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
 #include <seastar/util/log.hh>
+#include <yaml-cpp/yaml.h>
 
 using PeerId = uint64_t;
 struct serializer {};
@@ -18,7 +20,7 @@ struct Payload {
   std::vector<char> blob;
 };
 struct Config {
-  std::vector<PeerId> payload;
+  std::vector<std::pair<PeerId, Payload>> payload;
 };
 class Peer {
 public:

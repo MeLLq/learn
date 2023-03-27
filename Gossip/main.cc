@@ -1,33 +1,34 @@
 #include "gossip.hh"
 #include "ss.hh"
-#include <fstream>
 #include <seastar/core/thread.hh>
-#include <yaml-cpp/yaml.h>
 
 namespace bpo = boost::program_options;
-// static std::unique_ptr<Gossip> gossip;
 
 int main(int ac, char **av) {
   ss::app_template app;
   app.add_options()("id", bpo::value<uint64_t>(), "Local peer id")(
       "ip", bpo::value<std::string>(),
       "Local ip address")("port", bpo::value<uint16_t>(), "Local peer port")(
-      "payload", bpo::value<std::string>(), "Path to local peer payload file")(
-      "config", bpo::value<std::string>(), "Path to local peer config file")(
-      "peers", bpo::value<std::string>(), "Path to peers file");
+      "payload", bpo::value<std::string>(),
+      "Path to local peer payload file") /*(
+"config", bpo::value<std::string>(), "Path to local peer config file")(
+"peers", bpo::value<std::string>(), "Path to peers file")*/
+      ;
   return app.run_deprecated(ac, av, [&] {
+    ss::timer<ss::lowres_clock> timer;
     auto &&config = app.configuration();
     uint64_t id = config["id"].as<PeerId>();
     std::string ip = config["ip"].as<std::string>();
     uint16_t port = config["port"].as<uint16_t>();
     auto payload_path = config["payload"].as<std::string>();
-    auto config_path = config["config"].as<std::string>();
-    auto peers_path = config["peers"].as<std::string>();
+    // auto config_path = config["config"].as<std::string>();
+    // auto peers_path = config["peers"].as<std::string>();
     std::string ip_and_port = ip + ":" + std::to_string(port);
-    Gossip gossip(ip_and_port);
-    gossip.AddPeer(id, ip_and_port);
-
-    if (!std::filesystem::exists(peers_path)) {
+    Gossip gossip;
+    gossip.SetLocalPeer(id, ip_and_port);
+    // gossip.AddPeer(gossip.GetLocalPeer());
+    //  gossip.ReadPayload(payload_path);
+    /*if (!std::filesystem::exists(peers_path)) {
       std::ofstream create_file(peers_path);
       create_file.close();
     }
@@ -59,7 +60,7 @@ int main(int ac, char **av) {
     std::ifstream ifout1(payload_path);
     YAML::Node payload = YAML::Node(YAML::NodeType::Map);
     payload["epoch"] = 1;
-    payload["payload"] = "hello form peer 1";
+    payload["payload"] = "hello form peer " + std::to_string(id);
     ofout1 << payload;
     ofout1.close();
 
@@ -77,6 +78,6 @@ int main(int ac, char **av) {
     doc1["peers"].push_back(cfg);
     ofout2 << doc1 << std::endl;
     ifout2.close();
-    ofout2.close();
+    ofout2.close();*/
   });
 }
