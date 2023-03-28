@@ -14,7 +14,6 @@
 using PeerId = uint64_t;
 struct serializer {};
 
-static ss::rpc::protocol<serializer> myrpc(serializer{});
 struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;
@@ -27,7 +26,7 @@ public:
   Peer(PeerId id, ss::sstring ip_addr);
   void SetPayload(Payload add_payload);
   Payload GetPayload();
-  int GetId();
+  PeerId GetId();
   ss::sstring GetIpAddr();
 
 private:
