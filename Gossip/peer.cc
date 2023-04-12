@@ -1,6 +1,5 @@
 #pragma once
 #include "peer.hh"
-#include "ss.hh"
 
 static ss::logger lgr("rpc_demo");
 
@@ -11,8 +10,14 @@ void Peer::SetPayload(Payload add_payload) {
 
 Peer::Peer(PeerId id, ss::sstring ip_addr) {
   if (!ip_addr.empty()) {
-    myrpc.set_logger(&lgr);
+    /*myrpc.register_handler(TYPE_SEND_CONFIG, [this](Config input) {
+      return ClientRequest(input);
+      return ss::make_ready_future<ss::sstring>("yes");
+    });*/
     _ip_addr = ip_addr;
+    myrpc.set_logger(&lgr);
+    _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
+        myrpc, ss::ipv4_addr{ip_addr});
     std::cout << ip_addr << std::endl;
     _rpc_client = std::make_unique<ss::rpc::protocol<serializer>::client>(
         myrpc, ss::ipv4_addr{ip_addr});
@@ -35,4 +40,7 @@ ss::sstring Peer::GetIpAddr() { return _ip_addr; }
 std::unique_ptr<ss::rpc::protocol<serializer>::client> Peer::GetRpcClient() {
   return std::move(_rpc_client);
 }
-void Peer::SetConfig(Config add_config) { _config = std::move(add_config); }
+ss::future<ss::sstring> Peer::ClientRequest(Config input) {
+  fmt::print("ono tipa SRABOTALO\n");
+  return ss::make_ready_future<ss::sstring>("Hi, dada konechno");
+}

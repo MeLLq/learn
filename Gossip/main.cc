@@ -1,10 +1,10 @@
 #include "gossip.hh"
-#include "ss.hh"
 #include <seastar/core/sleep.hh>
 #include <seastar/core/thread.hh>
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
+
 int main(int ac, char **av) {
   Gossip gossip(0);
   ss::timer<ss::lowres_clock> timer;
@@ -27,7 +27,7 @@ int main(int ac, char **av) {
       std::string ip_and_port = ip + ":" + std::to_string(port);
       gossip.SetPeer(id, ip_and_port);
       gossip.AddPeer(peers_path);
-      /*gossip.ReadPayload(payload_path);
+      gossip.ReadPayload(payload_path);
       gossip.SetConfig(config_path);
       auto conf = gossip.GetConfig();
       for (const auto &[id, payload] : conf.payload) {

@@ -11,6 +11,7 @@
 #include <seastar/util/log.hh>
 #include <yaml-cpp/yaml.h>
 
+#define TYPE_SEND_CONFIG 10000
 using PeerId = uint64_t;
 struct serializer {};
 
@@ -19,9 +20,11 @@ struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;
 };
+
 struct Config {
   std::map<PeerId, Payload> payload;
 };
+
 class Peer {
 public:
   Peer(PeerId id, ss::sstring ip_addr = "");
@@ -32,11 +35,12 @@ public:
   ss::sstring GetIpAddr();
   std::unique_ptr<ss::rpc::protocol<serializer>::client> GetRpcClient();
   void SetConfig(Config add_config);
+  ss::future<ss::sstring> ClientRequest(Config input);
 
 private:
   Payload _payload;
   PeerId _id;
   ss::sstring _ip_addr;
   std::unique_ptr<ss::rpc::protocol<serializer>::client> _rpc_client = nullptr;
-  Config _config;
+  std::unique_ptr<ss::rpc::protocol<serializer>::server> _rpc_server = nullptr;
 };
