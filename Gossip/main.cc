@@ -1,13 +1,81 @@
 #include "gossip.hh"
+#include <seastar/core/app-template.hh>
 #include <seastar/core/sleep.hh>
 #include <seastar/core/thread.hh>
 
+// template <typename T, typename Output>
+// inline void write_arithmetic_type(Output &out, T v) {
+//   static_assert(std::is_arithmetic<T>::value, "must be arithmetic type");
+//   return out.write(reinterpret_cast<const char *>(&v), sizeof(T));
+// }
+//
+// template <typename T, typename Input> inline T read_arithmetic_type(Input
+// &in) {
+//   static_assert(std::is_arithmetic<T>::value, "must be arithmetic type");
+//   T v;
+//   in.read(reinterpret_cast<char *>(&v), sizeof(T));
+//   return v;
+// }
+// template <typename Output>
+// inline void write(serializer, Output &output, int32_t v) {
+//   return write_arithmetic_type(output, v);
+// }
+// template <typename Output>
+// inline void write(serializer, Output &output, uint32_t v) {
+//   return write_arithmetic_type(output, v);
+// }
+// template <typename Output>
+// inline void write(serializer, Output &output, int64_t v) {
+//   return write_arithmetic_type(output, v);
+// }
+// template <typename Output>
+// inline void write(serializer, Output &output, uint64_t v) {
+//   return write_arithmetic_type(output, v);
+// }
+// template <typename Output>
+// inline void write(serializer, Output &output, double v) {
+//   return write_arithmetic_type(output, v);
+// }
+// template <typename Input>
+// inline int32_t read(serializer, Input &input, ss::rpc::type<int32_t>) {
+//   return read_arithmetic_type<int32_t>(input);
+// }
+// template <typename Input>
+// inline uint32_t read(serializer, Input &input, ss::rpc::type<uint32_t>) {
+//   return read_arithmetic_type<uint32_t>(input);
+// }
+// template <typename Input>
+// inline uint64_t read(serializer, Input &input, ss::rpc::type<uint64_t>) {
+//   return read_arithmetic_type<uint64_t>(input);
+// }
+// template <typename Input>
+// inline uint64_t read(serializer, Input &input, ss::rpc::type<int64_t>) {
+//   return read_arithmetic_type<int64_t>(input);
+// }
+// template <typename Input>
+// inline double read(serializer, Input &input, ss::rpc::type<double>) {
+//   return read_arithmetic_type<double>(input);
+// }
+//
+// template <typename Output>
+// inline void write(serializer, Output &out, const ss::sstring &v) {
+//   write_arithmetic_type(out, uint32_t(v.size()));
+//   out.write(v.c_str(), v.size());
+// }
+//
+// template <typename Input>
+// inline ss::sstring read(serializer, Input &in, ss::rpc::type<ss::sstring>) {
+//   auto size = read_arithmetic_type<uint32_t>(in);
+//   ss::sstring ret = ss::uninitialized_string(size);
+//   in.read(ret.data(), size);
+//   return ret;
+// }
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
 
 int main(int ac, char **av) {
   Gossip gossip(0);
-  ss::timer<ss::lowres_clock> timer;
+  // ss::timer<ss::lowres_clock> timer;
   ss::app_template app;
   app.add_options()("id", bpo::value<uint64_t>(), "Local peer id")(
       "ip", bpo::value<std::string>(),
@@ -34,6 +102,7 @@ int main(int ac, char **av) {
         std::cout << "id " << id << "payload epoch " << payload.epoch
                   << "payload " << payload.blob << std::endl;
       }
+      gossip.TimerStart();
 
       /*timer.arm_periodic(1s);
 

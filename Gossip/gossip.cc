@@ -70,45 +70,52 @@ inline ss::sstring read(serializer, Input &in, ss::rpc::type<ss::sstring>) {
 
 template <typename Output>
 inline void write(serializer, Output &out, const Config &config) {
-  write_arithmetic_type(out, config.payload.size);
+  write_arithmetic_type(out, config.payload.size());
   for (const auto &payload : config.payload) {
     write_arithmetic_type(out, payload.first);
-    write_arithmetic_type(out, payload.second.blob.size);
-    write(out, payload.first);
-    write(out, payload.second.blob);
-    write(out, payload.second.epoch);
+    write_arithmetic_type(out, payload.second.blob.size());
+    write_arithmetic_type(out, payload.second.epoch);
+    out.write(payload.second.blob.data(), payload.second.blob.size());
   }
-  write(out, config.payload);
 }
 
 template <typename Input>
 inline Config read(serializer, Input &in, ss::rpc::type<Config>) {
   Config config;
-  read_arithmetic_type(in, config.payload.size);
-  for (const auto &payload : config.payload) {
-    read_arithmetic_type(in, payload.first);
-    read_arithmetic_type(in, payload.second.blob.size);
-    read(in, payload.first);
-    read(in, payload.second.blob);
-    read(in, payload.second.epoch);
+  auto payload_size = read_arithmetic_type<uint64_t>(in);
+  // read_arithmetic_type(in, &payload_size);
+  for (auto i = 0; i < payload_size; i++) {
+    auto Peer_Id = read_arithmetic_type<uint64_t>(in);
+    auto blob_size = read_arithmetic_type<uint64_t>(in);
+    auto epoch = read_arithmetic_type<uint64_t>(in);
+    std::vector<char> blob;
+    blob.reserve(blob_size);
+    in.read(blob.data(), blob_size);
+    config.payload[Peer_Id] = Payload(epoch, blob);
   }
-  read(in, config.payload);
   return config;
 }
 
 Gossip::Gossip(PeerId id)
     : _local_peer(std::move(ss::make_lw_shared<Peer>(id))) {
-  // auto send = myrpc.make_client<Config(Config)>(TYPE_SEND_CONFIG);
-  //_timer.arm_periodic(std::chrono::seconds(1));
-  //_timer.set_callback([&] {
-  //   send(*GetRandomPeer(), GetConfig()).then([&](Config config) {
-  //     SendConfig(config);
-  //     return ss::make_ready_future<>();
-  //   });
-  // });
+  myrpc.register_handler(TYPE_SEND_CONFIG, [&](Config input) {
+    SendConfig(input);
+    return ss::sstring("hi");
+  });
+  auto send = myrpc.make_client<ss::sstring(Config)>(TYPE_SEND_CONFIG);
+  _timer.set_callback([&, send] mutable {
+    std::cout << "Hello" << std::endl;
+    send(*GetRandomPeer(), GetConfig()).then([&](ss::sstring str) {
+      std::cout << str << std::endl;
+    });
+    std::cout << "Hello1" << std::endl;
+  });
 }
+void Gossip::TimerStart() { _timer.arm_periodic(std::chrono::seconds(3)); }
 
 void Gossip::SetPeer(PeerId id_peer, ss::sstring local_addres) {
+  _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
+      myrpc, ss::ipv4_addr{local_addres});
   _local_addres = local_addres;
   _peer = ss::make_lw_shared<Peer>(id_peer, local_addres);
 }
@@ -121,9 +128,14 @@ void Gossip::AddPeer(std::string filepath) {
     std::string ip = peer["ip"].as<std::string>();
     uint16_t port = peer["port"].as<uint16_t>();
     std::string ip_and_port = ip + ":" + std::to_string(port);
-    _peers[id] = ss::make_lw_shared<Peer>(id, ip_and_port);
+    if (id == _peer->GetId()) {
+      std::cout << id << "уже используется" << std::endl;
+    } else {
+      _peers[id] = ss::make_lw_shared<Peer>(id, ip_and_port);
+    }
   }
 }
+
 void Gossip::ReadPayload(std::string filepath) {
   YAML::Node config = YAML::LoadFile(filepath);
   uint64_t epoch = config["epoch"].as<uint64_t>();
@@ -132,7 +144,6 @@ void Gossip::ReadPayload(std::string filepath) {
   Payload new_payload{epoch, ready_payload};
   SetLocalPayload(new_payload);
 }
-
 void Gossip::SetLocalPayload(Payload &payload) {
   _local_peer->SetPayload(payload);
 }
@@ -163,23 +174,60 @@ void Gossip::SendConfig(Config config) {
               << " payload " << payload.blob << std::endl;
   }
 }
-
-std::unique_ptr<ss::rpc::protocol<serializer>::client> Gossip::GetRandomPeer() {
+ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   std::vector<PeerId> ids;
-  PeerId self_id = _peer.get()->GetId();
   for (const auto &peer : _peers) {
-    if (peer.first != self_id)
-      ids.push_back(peer.first);
+    ids.push_back(peer.first);
   }
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> distrib(0, ids.size() - 1);
+  // std::cout << ids.size() << std::endl;
   PeerId random_id = ids[distrib(gen)];
   return _peers[random_id]->GetRpcClient();
 }
 
+ss::future<ss::sstring> Gossip::ClientRequest(ss::sstring input) {
+  fmt::print("ono tipa SRABOTALO\n");
+  return ss::make_ready_future<ss::sstring>("Hi, dada konechno");
+}
 /*void Gossip::SetConfig() {
   for (const auto &[id, peer] : _peers) {
     _config[id] = peer.get()->GetPayload();
   }
+}
+std::unique_ptr<ss::rpc::protocol<serializer>::client> Gossip::GetRandomPeer() {
+  std::vector<PeerId> ids;
+  for (const auto &peer : _peers) {
+    ids.push_back(peer.first);
+  }
+  std::cout << "что-то" << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
+
+  PeerId random_id = ids[distrib(gen)];
+  std::cout << "что-то 1" << std::endl;
+  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
+  return _peers[random_id]->GetRpcClient();
+}
+void Gossip::pingResponseHandler(ss::sstring data) {
+  fmt::print("this is {}\n", data);
+}
+ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
+  // AddPeer("./peers.yml");
+  std::vector<PeerId> ids;
+  std::cout << _peers.size() << std::endl;
+  for (const auto &peer : _peers) {
+    ids.push_back(peer.first);
+  }
+  std::cout << "что-то" << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
+  std::cout << ids.size() << std::endl;
+  PeerId random_id = ids[1];
+  std::cout << "что-то 1" << std::endl;
+  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
+  return _peers[random_id]->GetRpcClient();
 }*/

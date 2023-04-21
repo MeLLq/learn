@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <seastar/core/app-template.hh>
 #include <seastar/core/future.hh>
 #include <seastar/core/loop.hh>
 #include <seastar/core/reactor.hh>
@@ -11,7 +10,6 @@
 #include <seastar/util/log.hh>
 #include <yaml-cpp/yaml.h>
 
-#define TYPE_SEND_CONFIG 10000
 using PeerId = uint64_t;
 struct serializer {};
 
@@ -33,14 +31,12 @@ public:
   Payload GetPayload();
   PeerId GetId();
   ss::sstring GetIpAddr();
-  std::unique_ptr<ss::rpc::protocol<serializer>::client> GetRpcClient();
+  ss::rpc::protocol<serializer>::client *GetRpcClient();
   void SetConfig(Config add_config);
-  ss::future<ss::sstring> ClientRequest(Config input);
 
 private:
   Payload _payload;
   PeerId _id;
   ss::sstring _ip_addr;
   std::unique_ptr<ss::rpc::protocol<serializer>::client> _rpc_client = nullptr;
-  std::unique_ptr<ss::rpc::protocol<serializer>::server> _rpc_server = nullptr;
 };

@@ -1,6 +1,6 @@
 #include "peer.hh"
 #include "ss.hh"
-
+#define TYPE_SEND_CONFIG 1
 class Gossip {
 public:
   Gossip(PeerId id);
@@ -13,8 +13,11 @@ public:
   void SetConfig(std::string filepath);
   Config GetConfig();
   void SendConfig(Config config);
-  std::unique_ptr<ss::rpc::protocol<serializer>::client> GetRandomPeer();
+  ss::rpc::protocol<serializer>::client *GetRandomPeer();
   void DelPeer(PeerId id);
+  ss::future<ss::sstring> pingHandler(Config data);
+  ss::future<ss::sstring> ClientRequest(ss::sstring input);
+  void TimerStart();
 
 private:
   ss::sstring _local_addres;
@@ -22,6 +25,6 @@ private:
   ss::lw_shared_ptr<Peer> _peer;
   std::map<PeerId, ss::lw_shared_ptr<Peer>> _peers;
   ss::timer<ss::lowres_clock> _timer;
-
+  std::unique_ptr<ss::rpc::protocol<serializer>::server> _rpc_server = nullptr;
   Config _config;
 };
