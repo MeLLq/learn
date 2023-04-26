@@ -12,10 +12,9 @@ public:
   std::map<PeerId, ss::lw_shared_ptr<Peer>> GetPeers() const;
   void SetConfig(std::string filepath);
   Config GetConfig();
-  void SendConfig(Config config);
+  void OnReceiveConfig(Config config);
   ss::rpc::protocol<serializer>::client *GetRandomPeer();
   void DelPeer(PeerId id);
-  ss::future<ss::sstring> pingHandler(Config data);
   ss::future<ss::sstring> ClientRequest(ss::sstring input);
   void StartTimer();
 

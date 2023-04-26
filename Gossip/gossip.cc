@@ -99,7 +99,7 @@ inline Config read(serializer, Input &in, ss::rpc::type<Config>) {
 Gossip::Gossip(PeerId id)
     : _local_peer(std::move(ss::make_lw_shared<Peer>(id))) {
   myrpc.register_handler(TYPE_SEND_CONFIG, [&](Config input) {
-    SendConfig(input);
+    OnReceiveConfig(input);
     return ss::sstring("hi");
   });
   auto send = myrpc.make_client<ss::sstring(Config)>(TYPE_SEND_CONFIG);
@@ -168,7 +168,7 @@ void Gossip::DelPeer(PeerId id) { _peers.erase(id); }
 std::map<PeerId, ss::lw_shared_ptr<Peer>> Gossip::GetPeers() const {
   return _peers;
 }
-void Gossip::SendConfig(Config config) {
+void Gossip::OnReceiveConfig(Config config) {
   for (const auto &[id, payload] : config.payload) {
     std::cout << "id " << id << " payload epoch " << payload.epoch
               << " payload " << payload.blob << std::endl;
