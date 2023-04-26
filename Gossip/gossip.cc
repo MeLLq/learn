@@ -111,9 +111,9 @@ Gossip::Gossip(PeerId id)
     std::cout << "Hello1" << std::endl;
   });
 }
-void Gossip::TimerStart() { _timer.arm_periodic(std::chrono::seconds(3)); }
+void Gossip::StartTimer() { _timer.arm_periodic(std::chrono::seconds(3)); }
 
-void Gossip::SetPeer(PeerId id_peer, ss::sstring local_addres) {
+void Gossip::SetLocalPeer(PeerId id_peer, ss::sstring local_addres) {
   _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
       myrpc, ss::ipv4_addr{local_addres});
   _local_addres = local_addres;
@@ -186,48 +186,3 @@ ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   PeerId random_id = ids[distrib(gen)];
   return _peers[random_id]->GetRpcClient();
 }
-
-ss::future<ss::sstring> Gossip::ClientRequest(ss::sstring input) {
-  fmt::print("ono tipa SRABOTALO\n");
-  return ss::make_ready_future<ss::sstring>("Hi, dada konechno");
-}
-/*void Gossip::SetConfig() {
-  for (const auto &[id, peer] : _peers) {
-    _config[id] = peer.get()->GetPayload();
-  }
-}
-std::unique_ptr<ss::rpc::protocol<serializer>::client> Gossip::GetRandomPeer() {
-  std::vector<PeerId> ids;
-  for (const auto &peer : _peers) {
-    ids.push_back(peer.first);
-  }
-  std::cout << "что-то" << std::endl;
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
-
-  PeerId random_id = ids[distrib(gen)];
-  std::cout << "что-то 1" << std::endl;
-  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
-  return _peers[random_id]->GetRpcClient();
-}
-void Gossip::pingResponseHandler(ss::sstring data) {
-  fmt::print("this is {}\n", data);
-}
-ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
-  // AddPeer("./peers.yml");
-  std::vector<PeerId> ids;
-  std::cout << _peers.size() << std::endl;
-  for (const auto &peer : _peers) {
-    ids.push_back(peer.first);
-  }
-  std::cout << "что-то" << std::endl;
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
-  std::cout << ids.size() << std::endl;
-  PeerId random_id = ids[1];
-  std::cout << "что-то 1" << std::endl;
-  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
-  return _peers[random_id]->GetRpcClient();
-}*/

@@ -4,7 +4,7 @@
 class Gossip {
 public:
   Gossip(PeerId id);
-  void SetPeer(PeerId id_peer, ss::sstring local_addres);
+  void SetLocalPeer(PeerId id_peer, ss::sstring local_addres);
   void AddPeer(std::string filepath);
   void SetLocalPayload(Payload &payload);
   Payload GetLocalPayload();
@@ -17,7 +17,7 @@ public:
   void DelPeer(PeerId id);
   ss::future<ss::sstring> pingHandler(Config data);
   ss::future<ss::sstring> ClientRequest(ss::sstring input);
-  void TimerStart();
+  void StartTimer();
 
 private:
   ss::sstring _local_addres;
