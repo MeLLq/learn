@@ -10,7 +10,6 @@ public:
   Payload GetLocalPayload();
   void ReadPayload(std::string filepath);
   std::map<PeerId, ss::lw_shared_ptr<Peer>> GetPeers() const;
-  void SetConfig(std::string filepath);
   Config GetConfig();
   void OnReceiveConfig(Config config);
   ss::rpc::protocol<serializer>::client *GetRandomPeer();
@@ -25,5 +24,4 @@ private:
   std::map<PeerId, ss::lw_shared_ptr<Peer>> _peers;
   ss::timer<ss::lowres_clock> _timer;
   std::unique_ptr<ss::rpc::protocol<serializer>::server> _rpc_server = nullptr;
-  Config _config;
 };

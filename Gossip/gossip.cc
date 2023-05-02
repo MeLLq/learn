@@ -150,18 +150,21 @@ void Gossip::SetLocalPayload(Payload &payload) {
 
 Payload Gossip::GetLocalPayload() { return _local_peer->GetPayload(); }
 
-void Gossip::SetConfig(std::string filepath) {
-  YAML::Node config1 = YAML::LoadFile(filepath);
-  auto peers = config1["peers"];
+Config Gossip::GetConfig() {
+  Config config;
+  auto peers = GetPeers();
   for (const auto &peer : peers) {
-    PeerId id = peer["id"].as<PeerId>();
-    uint64_t epoch = peer["epoch"].as<uint64_t>();
-    std::string payload_str = peer["payload"].as<std::string>();
-    std::vector<char> blob(payload_str.begin(), payload_str.end());
-    _config.payload[id] = Payload(epoch, blob);
+    PeerId id = peer.first;
+    if (id != _local_peer->GetId()) {
+      Payload payload = peer.second->GetPayload();
+      config.payload[id] = payload;
+    } else {
+      Payload payload = GetLocalPayload();
+      config.payload[id] = payload;
+    }
   }
+  return config;
 }
-Config Gossip::GetConfig() { return _config; }
 
 void Gossip::DelPeer(PeerId id) { _peers.erase(id); }
 
