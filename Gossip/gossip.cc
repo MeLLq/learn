@@ -126,11 +126,7 @@ void Gossip::AddPeer(std::string filepath) {
     std::string ip = peer["ip"].as<std::string>();
     uint16_t port = peer["port"].as<uint16_t>();
     std::string ip_and_port = ip + ":" + std::to_string(port);
-    if (id == _peer->GetId()) {
-      std::cout << id << "уже используется" << std::endl;
-    } else {
-      _peers[id] = ss::make_lw_shared<Peer>(id, ip_and_port);
-    }
+    _peers[id] = ss::make_lw_shared<Peer>(id, ip_and_port);
   }
 }
 
@@ -193,7 +189,8 @@ void Gossip::OnReceiveConfig(Config config) {
 ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   std::vector<PeerId> ids;
   for (const auto &peer : _peers) {
-    ids.push_back(peer.first);
+    if (peer.first != _peer->GetId())
+      ids.push_back(peer.first);
   }
   std::random_device rd;
   std::mt19937 gen(rd());
