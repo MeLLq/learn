@@ -1,6 +1,10 @@
 #pragma once
 #include "peer.hh"
 
+bool Payload::operator==(const Payload &other) const {
+  return epoch == other.epoch && blob == other.blob;
+}
+
 static ss::logger lgr("rpc_demo");
 
 void Peer::SetPayload(Payload add_payload) {

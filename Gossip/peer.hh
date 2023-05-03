@@ -17,6 +17,7 @@ static ss::rpc::protocol<serializer> myrpc(serializer{});
 struct Payload {
   uint64_t epoch; // number of epoch
   std::vector<char> blob;
+  bool operator==(const Payload &other) const;
 };
 
 struct Config {
@@ -32,7 +33,6 @@ public:
   PeerId GetId();
   ss::sstring GetIpAddr();
   ss::rpc::protocol<serializer>::client *GetRpcClient();
-  void SetConfig(Config add_config);
 
 private:
   Payload _payload;

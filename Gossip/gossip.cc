@@ -104,11 +104,9 @@ Gossip::Gossip(PeerId id)
   });
   auto send = myrpc.make_client<ss::sstring(Config)>(TYPE_SEND_CONFIG);
   _timer.set_callback([&, send] mutable {
-    std::cout << "Hello" << std::endl;
     send(*GetRandomPeer(), GetConfig()).then([&](ss::sstring str) {
       std::cout << str << std::endl;
     });
-    std::cout << "Hello1" << std::endl;
   });
 }
 void Gossip::StartTimer() { _timer.arm_periodic(std::chrono::seconds(3)); }
@@ -172,6 +170,21 @@ std::map<PeerId, ss::lw_shared_ptr<Peer>> Gossip::GetPeers() const {
   return _peers;
 }
 void Gossip::OnReceiveConfig(Config config) {
+  auto peers = GetPeers();
+  YAML::Node doc = YAML::LoadFile("./config.yml");
+  for (const auto &peer : peers) {
+    if (config.payload != GetConfig().payload) {
+      Payload payload = config.payload[peer.second->GetId()];
+      peer.second->SetPayload(payload);
+      doc["peers"][peer.second->GetId()]["epoch"] = payload.epoch;
+      doc["peers"][peer.second->GetId()]["payload"] = payload.blob;
+    } else {
+      std::cout << "Всё стабильно" << std::endl;
+    }
+  }
+  std::ofstream ofout1("./config.yml");
+  ofout1 << doc;
+  ofout1.close();
   for (const auto &[id, payload] : config.payload) {
     std::cout << "id " << id << " payload epoch " << payload.epoch
               << " payload " << payload.blob << std::endl;
@@ -185,7 +198,6 @@ ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> distrib(0, ids.size() - 1);
-  // std::cout << ids.size() << std::endl;
   PeerId random_id = ids[distrib(gen)];
   return _peers[random_id]->GetRpcClient();
 }
