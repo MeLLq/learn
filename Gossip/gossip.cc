@@ -177,6 +177,7 @@ void Gossip::OnReceiveConfig(Config config) {
       doc["peers"][peer.second->GetId()]["epoch"] = payload.epoch;
       doc["peers"][peer.second->GetId()]["payload"] = payload.blob;
       config_changed = true;
+      GetConfig();
     } else {
       std::cout << "Конфиг не изменился" << std::endl;
     }
