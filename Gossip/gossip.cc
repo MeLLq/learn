@@ -115,7 +115,7 @@ void Gossip::SetLocalPeer(PeerId id_peer, ss::sstring local_addres) {
   _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
       myrpc, ss::ipv4_addr{local_addres});
   _local_addres = local_addres;
-  _peer = ss::make_lw_shared<Peer>(id_peer, local_addres);
+  _local_peer = ss::make_lw_shared<Peer>(id_peer, local_addres);
 }
 
 void Gossip::AddPeer(std::string filepath) {
@@ -190,7 +190,7 @@ void Gossip::OnReceiveConfig(Config config) {
 ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   std::vector<PeerId> ids;
   for (const auto &peer : _peers) {
-    if (peer.first != _peer->GetId())
+    if (peer.first != _local_peer->GetId())
       ids.push_back(peer.first);
   }
   std::random_device rd;

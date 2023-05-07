@@ -20,7 +20,6 @@ public:
 private:
   ss::sstring _local_addres;
   ss::lw_shared_ptr<Peer> _local_peer;
-  ss::lw_shared_ptr<Peer> _peer;
   std::map<PeerId, ss::lw_shared_ptr<Peer>> _peers;
   ss::timer<ss::lowres_clock> _timer;
   std::unique_ptr<ss::rpc::protocol<serializer>::server> _rpc_server = nullptr;
