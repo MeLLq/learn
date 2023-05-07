@@ -169,7 +169,8 @@ void Gossip::OnReceiveConfig(Config config) {
   auto peers = GetPeers();
   YAML::Node doc = YAML::LoadFile("./config.yml");
   for (const auto &peer : peers) {
-    if (config.payload != GetConfig().payload) {
+    if (config.payload[peer.second->GetId()].epoch >
+        GetConfig().payload[peer.second->GetId()].epoch) {
       Payload payload = config.payload[peer.second->GetId()];
       peer.second->SetPayload(payload);
       doc["peers"][peer.second->GetId()]["epoch"] = payload.epoch;
