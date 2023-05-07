@@ -33,6 +33,8 @@ int main(int ac, char **av) {
         std::cout << "id " << id << "payload epoch " << payload.epoch
                   << "payload " << payload.blob << std::endl;
       }
+      gossip.ReadPayload(payload_path);
+      gossip.StartTimer();
       timer.arm_periodic(1s);
       timer.set_callback([&]() noexcept {
         auto &&config = app.configuration();
@@ -40,7 +42,7 @@ int main(int ac, char **av) {
         gossip.ReadPayload(payload_path);
         auto payload1 = gossip.GetLocalPayload();
       });
-      gossip.StartTimer();
+
     } catch (...) {
       std::cout << std::current_exception();
     }
