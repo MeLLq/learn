@@ -16,6 +16,7 @@ public:
   void DelPeer(PeerId id);
   ss::future<ss::sstring> ClientRequest(ss::sstring input);
   void StartTimer();
+  void SaveConfig(YAML::Node doc);
 
 private:
   ss::sstring _local_addres;

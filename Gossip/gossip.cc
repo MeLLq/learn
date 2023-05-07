@@ -168,6 +168,7 @@ std::map<PeerId, ss::lw_shared_ptr<Peer>> Gossip::GetPeers() const {
 void Gossip::OnReceiveConfig(Config config) {
   auto peers = GetPeers();
   YAML::Node doc = YAML::LoadFile("./config.yml");
+  bool config_changed = false;
   for (const auto &peer : peers) {
     if (config.payload[peer.second->GetId()].epoch >
         GetConfig().payload[peer.second->GetId()].epoch) {
@@ -175,17 +176,23 @@ void Gossip::OnReceiveConfig(Config config) {
       peer.second->SetPayload(payload);
       doc["peers"][peer.second->GetId()]["epoch"] = payload.epoch;
       doc["peers"][peer.second->GetId()]["payload"] = payload.blob;
+      config_changed = true;
     } else {
-      std::cout << "Всё стабильно" << std::endl;
+      std::cout << "Конфиг не изменился" << std::endl;
     }
   }
-  std::ofstream ofout1("./config.yml");
-  ofout1 << doc;
-  ofout1.close();
+  if (config_changed) {
+    SaveConfig(doc);
+  }
   for (const auto &[id, payload] : config.payload) {
     std::cout << "id " << id << " payload epoch " << payload.epoch
               << " payload " << payload.blob << std::endl;
   }
+}
+void Gossip::SaveConfig(YAML::Node doc) {
+  std::ofstream ofout1("./config.yml");
+  ofout1 << doc;
+  ofout1.close();
 }
 ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
   std::vector<PeerId> ids;
