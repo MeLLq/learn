@@ -28,12 +28,12 @@ int main(int ac, char **av) {
       std::string ip_and_port = ip + ":" + std::to_string(port);
       gossip.SetLocalPeer(id, ip_and_port);
       gossip.AddPeer(peers_path);
+      gossip.ReadPayload(payload_path);
       auto conf = gossip.GetConfig();
       for (const auto &[id, payload] : conf.payload) {
         std::cout << "id " << id << "payload epoch " << payload.epoch
-                  << "payload " << payload.blob << std::endl;
+                  << " payload " << payload.blob << std::endl;
       }
-      gossip.ReadPayload(payload_path);
       gossip.StartTimer();
       timer.arm_periodic(1s);
       timer.set_callback([&]() noexcept {
