@@ -112,10 +112,10 @@ Gossip::Gossip(PeerId id)
 void Gossip::StartTimer() { _timer.arm_periodic(std::chrono::seconds(3)); }
 
 void Gossip::SetLocalPeer(PeerId id_peer, ss::sstring local_addres) {
-  _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
-      myrpc, ss::ipv4_addr{local_addres});
   _local_addres = local_addres;
   _local_peer = ss::make_lw_shared<Peer>(id_peer, local_addres);
+  _rpc_server = std::make_unique<ss::rpc::protocol<serializer>::server>(
+      myrpc, ss::ipv4_addr{local_addres});
 }
 
 void Gossip::AddPeer(std::string filepath) {
@@ -202,8 +202,8 @@ ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
       ids.push_back(peer.first);
   }
   std::random_device rd;
-  std::mt19937 gen(rd());
+  _gen.seed(rd());
   std::uniform_int_distribution<> distrib(0, ids.size() - 1);
-  PeerId random_id = ids[distrib(gen)];
+  PeerId random_id = ids[distrib(_gen)];
   return _peers[random_id]->GetRpcClient();
 }

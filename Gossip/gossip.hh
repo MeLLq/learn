@@ -19,6 +19,7 @@ public:
   void SaveConfig(YAML::Node doc);
 
 private:
+  std::mt19937 _gen;
   ss::sstring _local_addres;
   ss::lw_shared_ptr<Peer> _local_peer;
   std::map<PeerId, ss::lw_shared_ptr<Peer>> _peers;
