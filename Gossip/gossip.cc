@@ -1,6 +1,6 @@
 #pragma once
 #include "gossip.hh"
-
+#define TYPE_SEND_CONFIG 1
 template <typename T, typename Output>
 inline void write_arithmetic_type(Output &out, T v) {
   static_assert(std::is_arithmetic<T>::value, "must be arithmetic type");
@@ -83,13 +83,11 @@ template <typename Input>
 inline Config read(serializer, Input &in, ss::rpc::type<Config>) {
   Config config;
   auto payload_size = read_arithmetic_type<uint64_t>(in);
-  // read_arithmetic_type(in, &payload_size);
   for (auto i = 0; i < payload_size; i++) {
     auto Peer_Id = read_arithmetic_type<uint64_t>(in);
     auto blob_size = read_arithmetic_type<uint64_t>(in);
     auto epoch = read_arithmetic_type<uint64_t>(in);
-    std::vector<char> blob;
-    blob.reserve(blob_size);
+    std::vector<char> blob(blob_size);
     in.read(blob.data(), blob_size);
     config.payload[Peer_Id] = Payload(epoch, blob);
   }
@@ -104,9 +102,11 @@ Gossip::Gossip(PeerId id)
   });
   auto send = myrpc.make_client<ss::sstring(Config)>(TYPE_SEND_CONFIG);
   _timer.set_callback([&, send] mutable {
-    send(*GetRandomPeer(), GetConfig()).then([&](ss::sstring str) {
-      std::cout << str << std::endl;
-    });
+    send(*GetRandomPeer(), GetConfig())
+        .then([](ss::sstring str) mutable { std::cout << str << std::endl; })
+        .handle_exception_type([&](ss::rpc::closed_error &err) {
+          std::cerr << "Произошло исключение " << err.what() << std::endl;
+        });
   });
 }
 void Gossip::StartTimer() { _timer.arm_periodic(std::chrono::seconds(3)); }
@@ -140,6 +140,14 @@ void Gossip::ReadPayload(std::string filepath) {
 }
 void Gossip::SetLocalPayload(Payload &payload) {
   _local_peer->SetPayload(payload);
+  if (!_initial_payload) {
+    auto peers = GetPeers();
+    for (const auto &peer : peers) {
+      Payload empty_payload{0, std::vector<char>()};
+      peer.second->SetPayload(empty_payload);
+    }
+    _initial_payload = true;
+  }
 }
 
 Payload Gossip::GetLocalPayload() { return _local_peer->GetPayload(); }
@@ -169,25 +177,39 @@ void Gossip::OnReceiveConfig(Config config) {
   auto peers = GetPeers();
   YAML::Node doc = YAML::LoadFile("./config.yml");
   bool config_changed = false;
-  for (const auto &peer : peers) {
-    if (config.payload[peer.second->GetId()].epoch >
-        GetConfig().payload[peer.second->GetId()].epoch) {
-      Payload payload = config.payload[peer.second->GetId()];
-      peer.second->SetPayload(payload);
-      doc["peers"][peer.second->GetId()]["epoch"] = payload.epoch;
-      doc["peers"][peer.second->GetId()]["payload"] = payload.blob;
-      config_changed = true;
-      GetConfig();
-    } else {
-      std::cout << "Конфиг не изменился" << std::endl;
+  int index = 0;
+  for (const auto &peer_node : doc["peers"]) {
+    if (peer_node.IsMap()) {
+      const auto &id_node = peer_node["id"];
+      if (id_node && id_node.IsScalar()) {
+        PeerId id = id_node.as<PeerId>();
+        if (config.payload.count(id) > 0) {
+          if (config.payload[id].epoch > GetConfig().payload[id].epoch) {
+            Payload payload = config.payload[id];
+            peers[id]->SetPayload(payload);
+            doc["peers"][index]["epoch"] = static_cast<uint64_t>(payload.epoch);
+            doc["peers"][index]["payload"] =
+                std::string(payload.blob.begin(), payload.blob.end());
+            config_changed = true;
+            GetConfig();
+          } else {
+            std::cout << "Конфиг не изменился" << std::endl;
+          }
+        }
+      }
     }
+    ++index;
   }
+
   if (config_changed) {
     SaveConfig(doc);
   }
+
   for (const auto &[id, payload] : config.payload) {
-    std::cout << "id " << id << " payload epoch " << payload.epoch
-              << " payload " << payload.blob << std::endl;
+    if (peers.count(id) > 0) {
+      std::cout << "id " << id << " payload epoch " << payload.epoch
+                << " payload " << payload.blob << std::endl;
+    }
   }
 }
 void Gossip::SaveConfig(YAML::Node doc) {

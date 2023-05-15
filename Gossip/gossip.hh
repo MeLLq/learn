@@ -1,6 +1,6 @@
 #include "peer.hh"
 #include "ss.hh"
-#define TYPE_SEND_CONFIG 1
+
 class Gossip {
 public:
   Gossip(PeerId id);
@@ -19,6 +19,7 @@ public:
   void SaveConfig(YAML::Node doc);
 
 private:
+  bool _initial_payload = false;
   std::mt19937 _gen;
   ss::sstring _local_addres;
   ss::lw_shared_ptr<Peer> _local_peer;
