@@ -7,7 +7,7 @@ namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
 
 int main(int ac, char **av) {
-  Gossip gossip(0);
+  Gossip gossip(1);
   ss::timer<ss::lowres_clock> timer;
   ss::app_template app;
   app.add_options()("id", bpo::value<uint64_t>(), "Local peer id")(
@@ -42,7 +42,6 @@ int main(int ac, char **av) {
         gossip.ReadPayload(payload_path);
         auto payload1 = gossip.GetLocalPayload();
       });
-
     } catch (...) {
       std::cout << std::current_exception();
     }

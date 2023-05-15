@@ -102,7 +102,8 @@ Gossip::Gossip(PeerId id)
   });
   auto send = myrpc.make_client<ss::sstring(Config)>(TYPE_SEND_CONFIG);
   _timer.set_callback([&, send] mutable {
-    send(*GetRandomPeer(), GetConfig())
+    auto peer = GetRandomPeer();
+    send(*peer, GetConfig())
         .then([](ss::sstring str) mutable { std::cout << str << std::endl; })
         .handle_exception_type([&](ss::rpc::closed_error &err) {
           std::cerr << "Произошло исключение " << err.what() << std::endl;

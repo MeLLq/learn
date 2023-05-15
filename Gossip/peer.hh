@@ -5,6 +5,7 @@
 #include <seastar/core/future.hh>
 #include <seastar/core/loop.hh>
 #include <seastar/core/reactor.hh>
+#include <seastar/core/sleep.hh>
 #include <seastar/core/timer.hh>
 #include <seastar/rpc/rpc.hh>
 #include <seastar/util/log.hh>
