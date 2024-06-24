@@ -1,0 +1,210 @@
+-c 1 --overprovisioned --server=0.0.0.0:12345
+include_directories(Gossip)
+add_subdirectory(Gossip)
+Gossip/main.cc Gossip/peer.cc Gossip/gossip.cc
+--id=2 --ip=127.0.0.1 --port=10002
+-c 1  --overprovisioned --id=2 --ip=127.0.0.1 --port=10002 --payload ./peer2/payload.yml --peers peers.yml --config config.yml
+./seastar/scripts/seastar-addr2line -e
+
+template <typename T, typename Output>
+inline void write_arithmetic_type(Output &out, T v) {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic type");
+  return out.write(reinterpret_cast<const char *>(&v), sizeof(T));
+}
+
+template <typename T, typename Input> inline T read_arithmetic_type(Input &in) {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic type");
+  T v;
+  in.read(reinterpret_cast<char *>(&v), sizeof(T));
+  return v;
+}
+
+template <typename Output>
+inline void write(serializer, Output &output, int32_t v) {
+  return write_arithmetic_type(output, v);
+}
+template <typename Output>
+inline void write(serializer, Output &output, uint32_t v) {
+  return write_arithmetic_type(output, v);
+}
+template <typename Output>
+inline void write(serializer, Output &output, int64_t v) {
+  return write_arithmetic_type(output, v);
+}
+template <typename Output>
+inline void write(serializer, Output &output, uint64_t v) {
+  return write_arithmetic_type(output, v);
+}
+template <typename Output>
+inline void write(serializer, Output &output, double v) {
+  return write_arithmetic_type(output, v);
+}
+template <typename Input>
+inline int32_t read(serializer, Input &input, ss::rpc::type<int32_t>) {
+  return read_arithmetic_type<int32_t>(input);
+}
+template <typename Input>
+inline uint32_t read(serializer, Input &input, ss::rpc::type<uint32_t>) {
+  return read_arithmetic_type<uint32_t>(input);
+}
+template <typename Input>
+inline uint64_t read(serializer, Input &input, ss::rpc::type<uint64_t>) {
+  return read_arithmetic_type<uint64_t>(input);
+}
+template <typename Input>
+inline uint64_t read(serializer, Input &input, ss::rpc::type<int64_t>) {
+  return read_arithmetic_type<int64_t>(input);
+}
+template <typename Input>
+inline double read(serializer, Input &input, ss::rpc::type<double>) {
+  return read_arithmetic_type<double>(input);
+}
+
+template <typename Output>
+inline void write(serializer, Output &out, const ss::sstring &v) {
+  write_arithmetic_type(out, uint32_t(v.size()));
+  out.write(v.c_str(), v.size());
+}
+
+template <typename Input>
+inline ss::sstring read(serializer, Input &in, ss::rpc::type<ss::sstring>) {
+  auto size = read_arithmetic_type<uint32_t>(in);
+  ss::sstring ret = uninitialized_string(size);
+  in.read(ret.data(), size);
+  return ret;
+}
+
+/*void Gossip::SetConfig() {
+  for (const auto &[id, peer] : _peers) {
+    _config[id] = peer.get()->GetPayload();
+  }
+}
+std::unique_ptr<ss::rpc::protocol<serializer>::client> Gossip::GetRandomPeer() {
+  std::vector<PeerId> ids;
+  for (const auto &peer : _peers) {
+    ids.push_back(peer.first);
+  }
+  std::cout << "что-то" << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
+
+  PeerId random_id = ids[distrib(gen)];
+  std::cout << "что-то 1" << std::endl;
+  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
+  return _peers[random_id]->GetRpcClient();
+}
+void Gossip::pingResponseHandler(ss::sstring data) {
+  fmt::print("this is {}\n", data);
+}
+ss::rpc::protocol<serializer>::client *Gossip::GetRandomPeer() {
+  // AddPeer("./peers.yml");
+  std::vector<PeerId> ids;
+  std::cout << _peers.size() << std::endl;
+  for (const auto &peer : _peers) {
+    ids.push_back(peer.first);
+  }
+  std::cout << "что-то" << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(0, ids.size() - 1);
+  std::cout << ids.size() << std::endl;
+  PeerId random_id = ids[1];
+  std::cout << "что-то 1" << std::endl;
+  std::cout << _peers[random_id]->GetIpAddr() << std::endl;
+  return _peers[random_id]->GetRpcClient();
+}*/
+ss::future<ss::sstring> Gossip::ClientRequest(ss::sstring input) {
+  fmt::print("ono tipa SRABOTALO\n");
+  return ss::make_ready_future<ss::sstring>("Hi, dada konechno");
+}
+    //  gossip.ReadPayload(payload_path);
+    /*if (!std::filesystem::exists(peers_path)) {
+      std::ofstream create_file(peers_path);
+      create_file.close();
+    }
+    std::ofstream ofout(peers_path, std::ofstream::in);
+    std::ifstream ifout(peers_path);
+    YAML::Node peer = YAML::Node(YAML::NodeType::Sequence);
+    YAML::Node doc = YAML::Load(ifout);
+
+    peer["id"] = id;
+    peer["ip"] = ip;
+    peer["port"] = port;
+    doc["peers"].push_back(peer);
+    ofout << doc << std::endl;
+    ifout.close();
+    ofout.close();
+
+    if (!std::filesystem::exists(payload_path)) {
+      std::string parse =
+          payload_path.substr(payload_path.find_first_of('/') + 1);
+      std::filesystem::create_directory(
+          parse.substr(0, parse.find_first_of('/')));
+      parse = parse.substr(parse.find_first_of('/') + 1);
+      if (parse.find_first_of('/') == std::string::npos) {
+        std::ofstream create_file1(payload_path);
+        create_file1.close();
+      }
+    }
+    std::ofstream ofout1(payload_path, std::ofstream::in);
+    std::ifstream ifout1(payload_path);
+    YAML::Node payload = YAML::Node(YAML::NodeType::Map);
+    payload["epoch"] = 1;
+    payload["payload"] = "hello form peer " + std::to_string(id);
+    ofout1 << payload;
+    ofout1.close();
+
+    if (!std::filesystem::exists(config_path)) {
+      std::ofstream create_file(config_path);
+      create_file.close();
+    }
+    std::ofstream ofout2(config_path, std::ofstream::in);
+    std::ifstream ifout2(config_path);
+    YAML::Node cfg = YAML::Node(YAML::NodeType::Sequence);
+    YAML::Node doc1 = YAML::Load(ifout2);
+    cfg["id"] = peer["id"];
+    cfg["epoch"] = payload["epoch"];
+    cfg["payload"] = payload["payload"];
+    doc1["peers"].push_back(cfg);
+    ofout2 << doc1 << std::endl;
+    ifout2.close();
+    ofout2.close();*/
+
+    peers:
+ - id: 2
+   epoch: 1
+   payload: hello from peer 2
+ - id: 1
+   epoch: 1
+   payload: hello from peer 1
+ - id: 3
+   epoch: 1
+   payload: hello from peer mell
+   
+   какая то неуддачная попытка
+   int retries = 0;
+    bool success = false;
+    auto peer = GetRandomPeer();
+    while (!success && retries < 5) {
+      retries++;
+      if (!peer) {
+        continue;
+      }
+      send(*peer, GetConfig())
+          .then([&, success](ss::sstring str) mutable {
+            std::cout << str << std::endl;
+            success = true;
+          })
+          .handle_exception_type([&](ss::rpc::closed_error &err) {
+            std::cerr << "Произошло исключение" << err.what() << std::endl;
+          });
+      if (!success) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+    }
+    if (!success) {
+      std::cerr << "Не удалось произвести соединение, количесвто попыток " << 5
+                << std::endl;
+    }
+  });

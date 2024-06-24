@@ -97,7 +97,7 @@ void pingResponseHandler(sstring data) { fmt::print("this is {}\n", data); }
 
 int main(int ac, char **av) {
   app_template app;
-  app.add_options()("port", bpo::value<uint16_t>()->default_value(12345),
+  app.add_options()("port", bpo::value<uint16_t>()->default_value(10001),
                     "RPC server port")("server", bpo::value<std::string>(),
                                        "Server address");
   std::cout << "start ";
@@ -118,7 +118,7 @@ int main(int ac, char **av) {
       client = std::make_unique<rpc::protocol<serializer>::client>(
           myrpc, ipv4_addr{config["server"].as<std::string>()});
       _stats_timer.arm_periodic(1s);
-      _stats_timer.set_callback([pingRPC] mutable {
+      _stats_timer.set_callback([&, pingRPC] mutable {
         pingRPC(*client, "ping")
             .then(pingResponseHandler)
             .handle_exception_type([](rpc::closed_error &err) {

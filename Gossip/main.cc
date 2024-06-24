@@ -31,8 +31,8 @@ int main(int ac, char **av) {
       gossip.ReadPayload(payload_path);
       auto conf = gossip.GetConfig();
       for (const auto &[id, payload] : conf.payload) {
-        std::cout << "id " << id << "payload epoch " << payload.epoch
-                  << " payload " << payload.blob << std::endl;
+        std::cout << "id " << id << " epoch " << payload.epoch << " payload "
+                  << payload.blob << std::endl;
       }
       gossip.StartTimer();
       timer.arm_periodic(1s);
